@@ -1,0 +1,116 @@
+
+services:
+  db1:
+    image: pgvector/pgvector:0.8.0-pg17
+    container_name: pgserver1
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mysecretpassword
+      POSTGRES_DB: mydatabase
+    volumes:
+      - db1_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U myuser -d mydatabase"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - net1
+
+  server1:
+    build: ./server
+    container_name: server1
+    restart: on-failure
+    depends_on:
+      db1:
+        condition: service_healthy
+    ports:
+      - "8001:8000"
+    env_file:
+      - ./server/.env
+    environment:
+      PGHOST: db1
+    networks:
+      - net1
+
+  db2:
+    image: pgvector/pgvector:0.8.0-pg17
+    container_name: pgserver2
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mysecretpassword
+      POSTGRES_DB: mydatabase
+    volumes:
+      - db2_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U myuser -d mydatabase"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - net2
+
+  server2:
+    build: ./server
+    container_name: server2
+    restart: on-failure
+    depends_on:
+      db2:
+        condition: service_healthy
+    ports:
+      - "8002:8000"
+    env_file:
+      - ./server/.env
+    environment:
+      PGHOST: db2
+    volumes:
+      - ./server:/app/src
+    networks:
+      - net2
+
+volumes:
+  db1_data:
+  db2_data:
+
+networks:
+  net1:
+    driver: bridge
+  net2:
+    driver: bridge
+
+
+# services:
+#   db:
+#     image: pgvector/pgvector:0.8.0-pg17
+#     container_name: pgserver
+#     environment:
+#       POSTGRES_USER: myuser
+#       POSTGRES_PASSWORD: mysecretpassword
+#       POSTGRES_DB: mydatabase
+#     ports:
+#       - "5432:5432"
+#     # Healthcheck so other containers can depend on it being ready
+#     healthcheck:
+#       test: ["CMD-SHELL", "pg_isready -U myuser -d mydatabase"]
+#       interval: 5s
+#       timeout: 5s
+#       retries: 5
+#     volumes:
+#       - db_data:/var/lib/postgresql/data
+
+#   server:
+#     restart: on-failure
+#     build: ./server
+#     container_name: server
+#     volumes:
+#       - ./server:/app/src
+#     depends_on:
+#       db:
+#         condition: service_healthy
+#     ports:
+#       - "8000:8000"
+#     env_file:
+#       - ./server/.env
+
+# volumes:
+#   db_data:
