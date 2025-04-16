@@ -20,6 +20,10 @@ app.get('/crawl', async (req, res) => {
   res.status(200).json({message: crawlRes})
 })
 
+app.put('/local/groups/put', (req, res) => {
+  const message = req.body
+})
+
 app.listen(8000, () => {
   console.log('Server is running on port 8000')
 })
