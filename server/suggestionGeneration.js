@@ -7,7 +7,7 @@ const genSuggestions = async () => {
     summaries.forEach(async(summary) => {
         const question = await generateQuestion(summary);
         const questionEmbedding = await generateEmbeddings(question);
-        await client.query('insert into suggestions(question, embeddings) values ($1::text, $2::vector)', [question, questionEmbedding])
+        await client.query('insert into suggestions(question, embeddings) values ($1::text, $2::vector)', [question, `[${questionEmbedding}]`])
 
     })
 
