@@ -1,6 +1,7 @@
 import { create } from "zustand"
 
 export type searchResult = {
+    id: number
     name: string
     description: string
     url: string
@@ -10,7 +11,7 @@ export type searchResult = {
     language?: string | null
     readmeUrl?: string
     summary?: string
-    contents?: string
+    content?: string
     distance: number 
 }
 
