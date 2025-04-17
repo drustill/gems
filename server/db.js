@@ -7,6 +7,7 @@ await client.connect()
 const init = async () => {
   await client.query(`CREATE EXTENSION IF NOT EXISTS vector;`);
   await client.query(`DROP TABLE IF EXISTS readmes;`)
+  await client.query(`DROP TABLE if exists suggestions`)
   await client.query(`
       CREATE TABLE IF NOT EXISTS readmes (
         id SERIAL PRIMARY KEY,
@@ -20,6 +21,13 @@ const init = async () => {
         embeddings VECTOR(1536)
       );
   `)
+  await client.query(`CREATE TABLE IF NOT EXISTS SUGGESTIONS
+    id serial PRIMARY KEY,
+    question TEXT,
+    embeddings VECTOR(1536)
+    
+      
+      `)
   console.log('[readmes]')
 }
 
