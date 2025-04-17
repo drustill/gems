@@ -52,7 +52,16 @@ function truncateContent(content) {
   }
   return content;
 }
-
+async function generateQuestion(content){
+  const completion = await groq.completions.create({
+    messages:[{
+      role:"system",
+      content:"You are generating mock user questions for question suggestions. Generate a question a user might ask about the given readme summary, make all questions short and as succinct as possible, use simple terms if possible. For example, if given a readme about a django project that interprets users voice, a question could be 'show me a python project that is focused on AI' or ' show me examples of voice recognition"
+    },
+      {role:'user', content}]
+  })
+ return completion.choices[0]?.message?.content || "";
+}
 async function summarizeWithGroq(content) {
   // Ensure content is truncated before sending to Groq
   const originalLength = content.length;
@@ -65,7 +74,6 @@ async function summarizeWithGroq(content) {
   }
 
   console.log("Sending request to Groq API for summarization...");
-
   const completion = await groq.chat.completions.create({
     messages: [
       {
@@ -179,4 +187,52 @@ const crawl = async (start = 1, end = 1) => {
   return keys
 }
 
-export {crawl, generateEmbeddings}
+
+export {crawl, generateQuestion, generateEmbeddings}
+
+/// FOR LATER
+
+// const createGroup = (groupId = 'mdfd', nodes) => {
+//   const groupConfig = {gid: groupId};
+//   const groupMembers = {}
+
+//   nodes.forEach((node) => {
+//     const sid = distribution.util.id.getSID(node)
+//     groupMembers[sid] = node
+//   })
+
+//   distribution.local.groups.put(groupConfig, groupMembers, (e, v) => {
+//     distribution.mdfd.groups.put(groupConfig, groupMembers, (e, v) => {
+//       console.log(`Group ${groupId} created with members:`, groupMembers);
+//     });
+//   })
+// }
+
+// const createRoute = (groupId = 'mdfd', key, fn) => {
+//   distribution[groupId].routes.put(fn, key, (e, v) => {
+//     if (e) {
+//       console.error(`Error creating route for ${key}:`, e);
+//     } else {
+//       console.log(`Route ${key} created successfully`);
+//     }
+//   });
+// }
+
+// const groupId = 'mdfd'
+// const crawlMessage = [1, 2]
+// const crawlRemote = {service: 'crawl', method: 'crawl'}
+
+
+
+// (async () => {
+//   try {
+//     await crawl();
+//     console.log("Crawling completed.");
+//   } catch (error) {
+//     console.error("An error occurred:", error);
+//   } finally {
+//     console.log("Server closed.");
+//   }
+// })();
+//
+
