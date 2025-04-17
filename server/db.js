@@ -21,13 +21,14 @@ const init = async () => {
         embeddings VECTOR(1536)
       );
   `)
-  await client.query(`CREATE TABLE IF NOT EXISTS SUGGESTIONS
-    id serial PRIMARY KEY,
-    question TEXT,
-    embeddings VECTOR(1536)
-    
-      
-      `)
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS suggestions (
+      id serial PRIMARY KEY,
+      question TEXT,
+      embeddings VECTOR(1536)
+    );
+  `)
+
   console.log('[readmes]')
 }
 

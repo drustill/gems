@@ -52,15 +52,23 @@ function truncateContent(content) {
   }
   return content;
 }
-async function generateQuestion(content){
-  const completion = await groq.completions.create({
-    messages:[{
-      role:"system",
-      content:"You are generating mock user questions for question suggestions. Generate a question a user might ask about the given readme summary, make all questions short and as succinct as possible, use simple terms if possible. For example, if given a readme about a django project that interprets users voice, a question could be 'show me a python project that is focused on AI' or ' show me examples of voice recognition"
-    },
-      {role:'user', content}]
+
+async function generateQuestion(content) {
+  const completion = await groq.chat.completions.create({
+    messages: [
+      {
+        role: "system",
+        content: "You are generating mock user questions for question suggestions. Generate a question a user might ask about the given readme summary, make all questions short and as succinct as possible, use simple terms if possible. For example, if given a readme about a django project that interprets users voice, a question could be 'show me a python project that is focused on AI' or ' show me examples of voice recognition. You must only output a single question, no other text."
+      },
+      {
+        role: 'user',
+        content
+      }
+    ],
+    model: "llama-3.1-8b-instant",
+    max_tokens: 512,
   })
- return completion.choices[0]?.message?.content || "";
+  return completion.choices[0]?.message?.content || "";
 }
 async function summarizeWithGroq(content) {
   // Ensure content is truncated before sending to Groq
