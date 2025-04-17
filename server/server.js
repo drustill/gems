@@ -39,7 +39,7 @@ app.get('/crawl', async (req, res) => {
   res.status(200).json({message: crawlRes})
 })
 
-<<<<<<< HEAD
+
 app.post('/query', async (req, res) => {
   log(`Query received ${req.body}`)
   const {query, language} = req.body
@@ -66,7 +66,7 @@ app.post('/query', async (req, res) => {
     res.status(200).json(result.rows)
   } catch (e) {
     log(`Error: ${e}`)
-=======
+
 app.post('/runSuggestions', async (req, res) => {
   try {
     //Done so we can know when it is finished
@@ -89,7 +89,7 @@ app.get('/suggestions', async (req, res) => {
   } catch (error) {
     console.error('Error getting suggestions:', error);
     res.status(500).json({error: 'Failed to get suggestions'});
->>>>>>> suggestions
+
   }
 })
 
