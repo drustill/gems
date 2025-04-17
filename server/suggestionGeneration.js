@@ -3,7 +3,7 @@ import {generateQuestion} from "./crawl.js";
 
 
 const genSuggestions = async () => {
-    const summaries = await client.query('SELECT summary from readmes;').rows;
+    const summaries = await client.query('SELECT summary from readmes limit 50;').rows;
     summaries.forEach(async(summary) => {
         const question = await generateQuestion(summary);
         const questionEmbedding = await generateEmbeddings(question);
