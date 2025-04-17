@@ -1,4 +1,4 @@
-import { DescribeInstancesCommand, EC2Client } from "@aws-sdk/client-ec2"
+import {DescribeInstancesCommand, EC2Client} from "@aws-sdk/client-ec2"
 
 console.log({
   AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
@@ -13,7 +13,7 @@ const client = new EC2Client({
   },
 });
 
-export default async function describeInstances(): Promise<any[]> {
+export default async function describeInstances(): Promise<string[]> {
   try {
     const command = new DescribeInstancesCommand({
       Filters: [
@@ -24,11 +24,11 @@ export default async function describeInstances(): Promise<any[]> {
       ],
     });
 
-    const { Reservations = [] } = await client.send(command);
+    const {Reservations = []} = await client.send(command);
 
     const ips = Reservations
       .flatMap(r => r.Instances || [])
-      .map(i => i.PublicIpAddress)
+      .map(i => i.PublicIpAddress || "")
       .filter(Boolean);
 
     return ips
