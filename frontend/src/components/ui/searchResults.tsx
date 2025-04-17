@@ -11,7 +11,7 @@ import {
   Star,
 } from "lucide-react";
 import Link from "next/link";
-import React, {useState, useRef, useEffect} from "react";
+import React from "react";
 import useSWR from "swr";
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from 'rehype-raw'
@@ -32,9 +32,8 @@ const TitleBadge = ({
 }
 
 const ResultCard: React.FC<{ result: searchResult }> = ({ result }) => {
-  const { data: markdown, error } = useSWR(result.url, fetcher);
+  const { data: markdown } = useSWR(result.url, fetcher);
   const router = useRouter()
-  const {searchText} = useSearchStore()
   const snippet = markdown
     ? markdown.split("\n").slice(0, 100).join("\n") + "\n\n\n\n..."
     : result.content?.slice(0, 200).replace(/\n/g, " ") + "...";
