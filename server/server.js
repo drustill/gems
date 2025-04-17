@@ -43,29 +43,36 @@ app.get('/crawl', async (req, res) => {
 app.post('/query', async (req, res) => {
   log(`Query received ${req.body}`)
   const {query, language} = req.body
-  
+
   log(`query ${query}`)
   const embeddings = await generateEmbeddings(query)
   log(`got embeddings`)
-  if (language){
+  if (language) {
     try {
       const result = await client.query(`
-      select *, embeddings <-> $1::vector as distance from readmes
+        select *, embeddings < - > $1::vector as distance
+        from readmes
         where language = $2::text
-      order by distance
-      limit 10`, [`[${embeddings.join(',')}]`, language])
+        order by distance
+          limit 10`, [`[${embeddings.join(',')}]`, language])
+      return res.status(200).json(result.rows)
+    } catch (e) {
+      log(`The error was ${e}`)
     }
   }
   try {
     const result = await client.query(`
-    SELECT *, embeddings <-> $1::vector FROM readmes
-    ORDER BY embeddings <-> $1::vector
+      SELECT *, embeddings < - > $1::vector
+      FROM readmes
+      ORDER BY embeddings < - > $1::vector
     LIMIT 10
-  `, [`[${embeddings.join(',')}]`])
+    `, [`[${embeddings.join(',')}]`])
     log(`got result`)
     res.status(200).json(result.rows)
   } catch (e) {
     log(`Error: ${e}`)
+  }
+});
 
 app.post('/runSuggestions', async (req, res) => {
   try {
