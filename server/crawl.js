@@ -3,6 +3,7 @@ import {createAppAuth} from "@octokit/auth-app";
 import {convert} from "html-to-text";
 import removeMd from "remove-markdown";
 import {client} from './db.js'
+import {supabase} from "./supabase.js";
 
 import OpenAI from 'openai';
 import Groq from "groq-sdk";
@@ -142,105 +143,115 @@ const storeRecord = async (key, record) => {
   `, values)
 }
 
+
 const crawl = async (start = 1, end = 1) => {
-  const keys = []
-  const query = "stars:>1000";
-  const perPage = 1;
+  const keys = [];
+  const perPage = 10;
 
   for (let page = start; page <= end; page++) {
     console.log(`Fetching page ${page}...`);
-    const {data} = await octokit.search.repos({
-      q: query,
-      sort: "stars",
-      order: "desc",
-      per_page: perPage,
-      page: page,
-    });
 
-    for (let repo of data.items) {
-      const {name, owner, stargazers_count, language, default_branch} = repo;
-      const readmeUrl = `https://raw.githubusercontent.com/${owner.login}/${name}/${default_branch}/README.md`;
-      const readmeContent = await getCleanMarkdown(readmeUrl);
+    // Calculate pagination parameters
+    const from = (page - 1) * perPage;
+    const to = from + perPage - 1;
+    console.log(from, to)
 
-      if (!readmeContent) {
-        continue;
-      }
+    // Fetch data from Supabase
+    const {data, error} = await supabase
+      .from('readmes')
+      .select('*')
+      .range(from, to);
 
-      // Generate summary and embeddings
-      console.log(`Processing ${owner.login}/${name}...`);
-      const summary = await summarizeWithGroq(readmeContent);
-      const embeddings = await generateEmbeddings(summary);
+    if (error) {
+      console.error('Error fetching from Supabase:', error);
+      continue;
+    }
+
+    if (!data || data.length === 0) {
+      console.log(`No data found for page ${page}`);
+      continue;
+    }
+
+    for (let repo of data) {
+      const {name, owner, stars, language, url, content, summary, embeddings} = repo;
 
       const record = {
         name,
-        owner: owner.login,
-        stars: stargazers_count,
+        owner,
+        stars,
         language,
-        readmeUrl,
-        readmeContent,
+        readmeUrl: url,
+        readmeContent: content,
         summary,
-        embeddings: `[${embeddings.join(",")}]`
+        embeddings: embeddings || '[]'
       };
 
-      const key = `${owner.login}/${name}`;
+      const key = `${owner}/${name}`;
       keys.push(key);
+
       try {
         await storeRecord(key, record);
-        console.log(`Stored record for ${key} with summary and embeddings`);
+        console.log(`Stored record for ${key} from Supabase`);
       } catch (error) {
         console.error(`Error storing record for ${key}:`, error);
       }
     }
   }
-  return keys
+  return keys;
 }
 
 
 export {crawl, generateQuestion, generateEmbeddings}
 
-/// FOR LATER
+// const crawl = async (start = 1, end = 1) => {
+//   const keys = []
+//   const query = "stars:>1000";
+//   const perPage = 1;
 
-// const createGroup = (groupId = 'mdfd', nodes) => {
-//   const groupConfig = {gid: groupId};
-//   const groupMembers = {}
-
-//   nodes.forEach((node) => {
-//     const sid = distribution.util.id.getSID(node)
-//     groupMembers[sid] = node
-//   })
-
-//   distribution.local.groups.put(groupConfig, groupMembers, (e, v) => {
-//     distribution.mdfd.groups.put(groupConfig, groupMembers, (e, v) => {
-//       console.log(`Group ${groupId} created with members:`, groupMembers);
+//   for (let page = start; page <= end; page++) {
+//     console.log(`Fetching page ${page}...`);
+//     const {data} = await octokit.search.repos({
+//       q: query,
+//       sort: "stars",
+//       order: "desc",
+//       per_page: perPage,
+//       page: page,
 //     });
-//   })
-// }
 
-// const createRoute = (groupId = 'mdfd', key, fn) => {
-//   distribution[groupId].routes.put(fn, key, (e, v) => {
-//     if (e) {
-//       console.error(`Error creating route for ${key}:`, e);
-//     } else {
-//       console.log(`Route ${key} created successfully`);
+//     for (let repo of data.items) {
+//       const {name, owner, stargazers_count, language, default_branch} = repo;
+//       const readmeUrl = `https://raw.githubusercontent.com/${owner.login}/${name}/${default_branch}/README.md`;
+//       const readmeContent = await getCleanMarkdown(readmeUrl);
+
+//       if (!readmeContent) {
+//         continue;
+//       }
+
+//       // Generate summary and embeddings
+//       console.log(`Processing ${owner.login}/${name}...`);
+//       const summary = await summarizeWithGroq(readmeContent);
+//       const embeddings = await generateEmbeddings(summary);
+
+//       const record = {
+//         name,
+//         owner: owner.login,
+//         stars: stargazers_count,
+//         language,
+//         readmeUrl,
+//         readmeContent,
+//         summary,
+//         embeddings: `[${embeddings.join(",")}]`
+//       };
+
+//       const key = `${owner.login}/${name}`;
+//       keys.push(key);
+//       try {
+//         await storeRecord(key, record);
+//         console.log(`Stored record for ${key} with summary and embeddings`);
+//       } catch (error) {
+//         console.error(`Error storing record for ${key}:`, error);
+//       }
 //     }
-//   });
-// }
-
-// const groupId = 'mdfd'
-// const crawlMessage = [1, 2]
-// const crawlRemote = {service: 'crawl', method: 'crawl'}
-
-
-
-// (async () => {
-//   try {
-//     await crawl();
-//     console.log("Crawling completed.");
-//   } catch (error) {
-//     console.error("An error occurred:", error);
-//   } finally {
-//     console.log("Server closed.");
 //   }
-// })();
-//
-
+//   return keys
+// }

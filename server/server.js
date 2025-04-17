@@ -63,7 +63,7 @@ app.post('/query', async (req, res) => {
   }
   try {
     const result = await client.query(`
-      SELECT *, embeddings <=> $1::vector
+      SELECT *, embeddings <=> $1::vector as distance
       FROM readmes
       ORDER BY embeddings <=> $1::vector
     LIMIT 10

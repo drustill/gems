@@ -8,5 +8,6 @@ COPY ./server.js ./
 COPY ./db.js ./
 COPY ./crawl.js ./
 COPY ./suggestionGeneration.js ./
+COPY ./supabase.js ./
 
 CMD ["npm","start"]
