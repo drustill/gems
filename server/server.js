@@ -18,6 +18,11 @@ app.get('/select', async (req, res) => {
   const result = await client.query('SELECT (name, owner) FROM readmes')
   res.send(result.rows)
 })
+app.get("/languages", async(req,res)=> {
+  const result = await client.query(`select distinct language from readmes`)
+  res.send(result.rows);
+})
+
 
 app.get('/crawl', async (req, res) => {
   const {start, end} = req.query
@@ -28,10 +33,20 @@ app.get('/crawl', async (req, res) => {
 
 app.post('/query', async (req, res) => {
   log(`Query received ${req.body}`)
-  const {query} = req.body
+  const {query, language} = req.body
+  
   log(`query ${query}`)
   const embeddings = await generateEmbeddings(query)
   log(`got embeddings`)
+  if (language){
+    try {
+      const result = await client.query(`
+      select *, embeddings <-> $1::vector as distance from readmes
+        where language = $2::text
+      order by distance
+      limit 10`, [`[${embeddings.join(',')}]`, language])
+    }
+  }
   try {
     const result = await client.query(`
     SELECT *, embeddings <-> $1::vector FROM readmes
